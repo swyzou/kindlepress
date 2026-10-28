@@ -41,7 +41,12 @@ const JUNK_SELECTORS = [
   "noscript",
   "iframe",
   "svg use",
+  "[class*='skip-link']",
+  "[class*='skip-to-content']",
 ];
+
+/** Accessibility skip links read as body text once the chrome is gone. */
+const SKIP_LINK_TEXT = /^\s*(skip|jump)\s+(to|over|past|navigation|main|content)\b/i;
 
 /** Largest candidate from a srcset string. */
 function fromSrcset(srcset) {
@@ -122,6 +127,20 @@ function removeJunk(doc) {
       if (sel.startsWith("[aria-hidden") && el.textContent.length > 2000) continue;
       el.remove();
     }
+  }
+  removeSkipLinks(doc);
+}
+
+/**
+ * Drop "Skip to main content" anchors. They are in-page links whose text is
+ * navigation, not prose, and they survive into the first paragraph of sites
+ * that place them inside the article wrapper. Length is capped so a real
+ * sentence that happens to start with "skip to" is never removed.
+ */
+function removeSkipLinks(doc) {
+  for (const a of doc.querySelectorAll('a[href^="#"]')) {
+    const text = a.textContent || "";
+    if (text.length <= 60 && SKIP_LINK_TEXT.test(text)) a.remove();
   }
 }
 

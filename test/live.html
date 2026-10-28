@@ -33,16 +33,16 @@
       import { buildEpub } from "../src/epub.js";
 
       const SITES = [
-        ["BBC",            "https://www.bbc.com/news/articles/c3gkz1e5e8yo"],
-        ["Guardian",       "https://www.theguardian.com/science/2024/jan/05/attosecond-physics-nobel"],
-        ["NPR",            "https://www.npr.org/sections/goats-and-soda/"],
+        ["BBC",            "https://www.bbc.com/news/articles/c5m2dry2xwwvo"],
+        ["Guardian",       "https://www.theguardian.com/science/2026/oct/01/lismore-archaeological-finds-scottish-island-monastery-spread-of-christianity"],
+        ["NPR",            "https://www.npr.org/2026/10/26/nx-s1-6012820/ai-hurricane-forecast-google-deepmind-isaias"],
         ["Le Monde",       "https://www.lemonde.fr/pixels/"],
         ["France Info",    "https://www.francetvinfo.fr/sciences/"],
-        ["Ars Technica",   "https://arstechnica.com/gadgets/"],
-        ["The Verge",      "https://www.theverge.com/tech"],
+        ["Ars Technica",   "https://arstechnica.com/gadgets/2026/10/apple-iphone-duo-review-two-screens-two-experiences-two-thousand-dollars"],
+        ["The Verge",      "https://www.theverge.com/2024/11/1/24285347/apple-globalstar-investment-expansion-emergency-sos-satellite"],
         ["Stratechery",    "https://stratechery.com/2024/the-gen-ai-bridge-to-the-future/"],
         ["Paul Graham",    "https://paulgraham.com/greatwork.html"],
-        ["Julia Evans",    "https://jvns.ca/blog/2023/11/10/notes-on-git-error-messages/"],
+        ["Julia Evans",    "https://jvns.ca/blog/2024/11/18/how-to-import-a-javascript-library/"],
         ["Dan Luu",        "https://danluu.com/diseconomies-scale/"],
         ["Substack",       "https://www.platformer.news/archive/"],
         ["Medium",         "https://medium.com/better-programming"],
@@ -58,7 +58,7 @@
       const BOILER = ["Skip to main content", "Jump to content", "Accept all cookies", "Sign in to continue"];
       const b64 = (b) => { const s = atob(b); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
       const tbody = document.querySelector("#t tbody");
-      let ok = 0, soft = 0, hard = 0;
+      let ok = 0, soft = 0, hard = 0, net = 0;
 
       for (const [name, url] of SITES) {
         const row = tbody.insertRow();
@@ -67,7 +67,13 @@
         try {
           const res = await fetch(`/proxy?url=${encodeURIComponent(url)}`);
           const text = await res.text();
-          if (text.startsWith('{"error"')) { cell("fetch failed: " + text.slice(0, 60), "bad"); hard++; continue; }
+          if (text.startsWith('{"error"')) {
+            // The proxy could not retrieve the page: stale test URL, or the site
+            // blocks server-side clients. The extension reads the DOM of the tab
+            // and never fetches a URL, so this exercises nothing in extract.js.
+            cell("unreachable: " + text.slice(9, 60).replace(/[:<>{}"]/g, " ").trim(), "warn");
+            net++; continue;
+          }
           const doc = new DOMParser().parseFromString(text, "text/html");
           const a = await globalThis.__kpExtract({ doc, baseUrl: res.headers.get("X-Final-Url") || url, includeImages: false });
 
@@ -110,7 +116,8 @@
       }
 
       const sum = document.getElementById("sum");
-      sum.textContent = `${ok} good · ${soft} weak · ${hard} broken  (of ${SITES.length})`;
+      sum.textContent = `${ok} good · ${soft} weak · ${hard} broken · ${net} unreachable  (of ${SITES.length})`
+        + (net ? "  —  unreachable = the test proxy was blocked or the URL moved; not an extraction failure" : "");
       sum.className = hard ? "bad" : soft ? "warn" : "ok";
     </script>
   </body>
