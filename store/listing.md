@@ -8,27 +8,35 @@ Tout est prêt à copier-coller. Les champs sont dans l'ordre du formulaire.
 
 **Name**
 ```
-KindlePress — Send articles to Kindle
+KindlePress — Send to Kindle, free and unlimited
 ```
 
-**Summary** (132 caractères max — celui-ci en fait 109)
+**Summary** (132 max — celui-ci en fait 124) — vient du manifest, pas du formulaire
 ```
-Turn any web page into a clean EPUB for your Kindle. Unlimited, free, no account, nothing leaves your browser.
+Any page to a clean EPUB for Kindle. Unlimited and free, no account, no server. You download the file and drop it on Amazon.
 ```
 
 **Description**
 ```
 KindlePress turns the article you are reading into a clean EPUB you can read on your Kindle.
 
-Click the icon. It reads the page, keeps what matters, and hands you the file. That is the whole product.
+Click the icon. It reads the page, keeps what matters, and hands you the file. You then drop that file on Amazon's Send to Kindle page, or email it to your @kindle.com address. That last step is yours, and it is the honest trade for everything below.
 
 UNLIMITED, BECAUSE THERE IS NO SERVER
 
 Every other send-to-Kindle tool runs a backend, which is why they all meter you: credits that run out, trials that expire, subscriptions. KindlePress builds the EPUB inside your browser. Nothing is sent anywhere, nothing costs anything per article, so there is nothing to meter. Free is not an introductory offer here — it is a consequence of how it is built.
 
+Delivering the file for you would mean running that same backend, or asking for access to your email. Both would bring back the metering this exists to avoid, so KindlePress hands you the file instead.
+
 NO ACCOUNT, NO SITE PERMISSIONS
 
 There is no service to sign up for. And KindlePress asks for no access to any website: it uses Chrome's activeTab permission, which grants access to one tab, for one click, only when you ask. You can check this yourself in the permissions list — there are three, and none of them is "read your data on all websites".
+
+YOU DO NOT HAVE TO TAKE THAT ON FAITH
+
+The full source is on GitHub: https://github.com/swyzou/kindlepress
+
+There is exactly one network call in the whole extension, and it fetches images from the page you are reading so they can be embedded in the EPUB. No analytics, no telemetry, no error reporting, no remote configuration. You can read it, grep it, or load it unpacked and watch the Network tab yourself.
 
 IT KEEPS WHAT THE OTHERS DROP
 
@@ -39,6 +47,8 @@ IT KEEPS WHAT THE OTHERS DROP
 - Pages you are logged into, university proxies, and pop-up paywalls, because it reads the window you are looking at
 
 WHAT IT CANNOT DO
+
+Delivery is manual, as described above.
 
 Where a site enforces a hard paywall on its server, the text was never sent to your browser, so nothing running in your browser can recover it. KindlePress will tell you it only found part of the article rather than silently producing a stub.
 
@@ -88,7 +98,11 @@ Saves the generated EPUB file to the user's downloads folder.
 - ✅ I do not use or transfer user data for purposes that are unrelated to my item's single purpose
 - ✅ I do not use or transfer user data to determine creditworthiness or for lending purposes
 
-**Privacy policy URL** → voir `privacy.md`, à héberger (GitHub Pages ou Gist public)
+**Privacy policy URL** → voir `privacy.md`, hébergé en gist public
+**Support URL** → `https://github.com/swyzou/kindlepress`
+
+> Le **nom** et le **summary** viennent du `manifest.json` : les changer impose de
+> réimporter le ZIP. La **description** longue s'édite à la main dans le formulaire.
 
 ---
 
