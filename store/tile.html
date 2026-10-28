@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>KindlePress — promotional tiles</title>
+    <!--
+      Promotional tiles for the Microsoft Edge Add-ons listing.
+      Edge requires exact pixel sizes: 440x280 (small) and 1400x560 (large).
+
+      Render with headless Chrome, which is the only way to get the exact
+      canvas without the window chrome rounding it:
+
+        CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        "$CHROME" --headless --disable-gpu --hide-scrollbars \
+          --screenshot=store/edge-tile-small.png --window-size=440,280 \
+          "file://$PWD/store/tile.html?s=small"
+        "$CHROME" --headless --disable-gpu --hide-scrollbars \
+          --screenshot=store/edge-tile-large.png --window-size=1400,560 \
+          "file://$PWD/store/tile.html?s=large"
+
+      The artwork is the same drawing as icons/ — the reader frame with a page
+      inside — so the tile and the icon read as one thing in the listing.
+    -->
+    <style>
+      :root {
+        --ink: #17171a;
+        --muted: #6b6b73;
+        --paper: #f7f5f1;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; overflow: hidden; background: var(--paper); }
+      /* The flex centring needs a real height to work against, or the block
+         sits at the top of the canvas with the slack left underneath. */
+      html { height: 100%; }
+      body {
+        min-height: 100%;
+        display: flex; align-items: center;
+        color: var(--ink);
+        font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+
+      /* The device, drawn at 128 and scaled, exactly as icon.html does it. */
+      .device {
+        width: 104px; height: 104px; border-radius: 24px; flex: none;
+        background: linear-gradient(160deg, #2a2a30 0%, #141418 100%);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        transform-origin: center;
+      }
+      .page {
+        width: 58px; height: 70px; background: #f7f5f1; border-radius: 4px;
+        padding: 11px 10px 0; box-sizing: border-box; position: relative;
+      }
+      .page:after {
+        content: ""; position: absolute; top: 0; right: 0;
+        border-width: 0 13px 13px 0; border-style: solid;
+        border-color: transparent #2a2a30 transparent transparent;
+        border-radius: 0 4px 0 0;
+      }
+      .l { height: 4px; border-radius: 2px; background: #17171a; margin-bottom: 6px; }
+      .l.a { width: 60%; } .l.b { width: 100%; } .l.c { width: 100%; } .l.d { width: 72%; }
+
+      h1 { margin: 0; font-weight: 660; letter-spacing: -0.025em; line-height: 1.06; }
+      p  { margin: 0; color: var(--muted); }
+
+      /* 440x280 — stacked, because the tile is nearly square. */
+      body.small { flex-direction: column; justify-content: center; padding: 0 34px; text-align: center; }
+      body.small .device { transform: scale(0.82); margin-bottom: 14px; }
+      body.small h1 { font-size: 34px; }
+      body.small p  { font-size: 15px; margin-top: 10px; }
+
+      /* 1400x560 — side by side, with room to breathe. */
+      body.large { flex-direction: row; justify-content: center; gap: 72px; padding: 0 110px; }
+      body.large .device { transform: scale(2.3); margin: 0 46px; }
+      body.large .txt { max-width: 720px; }
+      body.large h1 { font-size: 76px; }
+      body.large p  { font-size: 27px; margin-top: 22px; line-height: 1.45; }
+    </style>
+  </head>
+  <body>
+    <div class="device">
+      <div class="page">
+        <div class="l a"></div><div class="l b"></div><div class="l c"></div><div class="l d"></div>
+      </div>
+    </div>
+    <div class="txt">
+      <h1>KindlePress</h1>
+      <p id="sub">Any web page to a clean EPUB for your Kindle — built in your browser, so it stays unlimited and free.</p>
+    </div>
+    <script>
+      const size = new URLSearchParams(location.search).get("s") === "large" ? "large" : "small";
+      document.body.className = size;
+      // The small tile has no room for the full sentence without shrinking the
+      // type below what is legible in a listing.
+      if (size === "small") {
+        document.getElementById("sub").textContent = "Web page to EPUB. No server, no account, no limits.";
+      }
+    </script>
+  </body>
+</html>
