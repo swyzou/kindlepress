@@ -1,0 +1,44 @@
+KindlePress turns the article you are reading into a clean EPUB you can read on your Kindle.
+
+Click the icon. It reads the page, keeps what matters, and hands you the file. You then drop that file on Amazon's Send to Kindle page, or email it to your @kindle.com address. That last step is yours, and it is the honest trade for everything below.
+
+UNLIMITED, BECAUSE THERE IS NO SERVER
+
+Every other send-to-Kindle tool runs a backend, which is why they all meter you: credits that run out, trials that expire, subscriptions. KindlePress builds the EPUB inside your browser. Nothing is sent anywhere, nothing costs anything per article, so there is nothing to meter. Free is not an introductory offer here — it is a consequence of how it is built.
+
+Delivering the file for you would mean running that same backend, or asking for access to your email. Both would bring back the metering this exists to avoid, so KindlePress hands you the file instead.
+
+NO ACCOUNT, NO SITE PERMISSIONS
+
+There is no service to sign up for. And KindlePress asks for no access to any website: it uses the browser's activeTab permission, which grants access to one tab, for one click, only when you ask. You can check this yourself in the permissions list — there are three, and none of them is "read your data on all websites".
+
+YOU DO NOT HAVE TO TAKE THAT ON FAITH
+
+The full source is on GitHub: https://github.com/swyzou/kindlepress
+
+There is exactly one network call in the whole extension, and it fetches images from the page you are reading so they can be embedded in the EPUB. No analytics, no telemetry, no error reporting, no remote configuration. You can read it, grep it, or load it unpacked and watch the Network tab yourself.
+
+IT KEEPS WHAT THE OTHERS DROP
+
+- Images, including lazy-loaded ones and figures that most readers miss entirely
+- Data tables, instead of mistaking them for page layout
+- Footnotes, rebuilt as proper endnotes with links that work both ways
+- Right-to-left text — Arabic, Hebrew and Persian keep their direction
+- Pages you are logged into, university proxies, and pop-up paywalls, because it reads the window you are looking at
+
+WHAT IT CANNOT DO
+
+Delivery is manual, as described above.
+
+Where a site enforces a hard paywall on its server, the text was never sent to your browser, so nothing running in your browser can recover it. KindlePress will tell you it only found part of the article rather than silently producing a stub.
+
+Images on servers that refuse cross-origin requests are skipped, and the panel tells you how many.
+
+HOW IT WORKS
+
+1. Open an article
+2. Click the KindlePress icon
+3. Download EPUB
+4. Drop the file on Amazon's Send to Kindle page, or email it to your @kindle.com address
+
+Article extraction uses Mozilla's Readability, the open-source engine behind most reader modes, with fixes on top for images, tables and footnotes.
