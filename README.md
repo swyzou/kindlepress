@@ -3,24 +3,32 @@
 Turn any web page into a clean EPUB for your Kindle. Unlimited, free, no account,
 nothing leaves your browser.
 
+[**Install from the Chrome Web Store**](https://chromewebstore.google.com/detail/ihhhlojeadcmjhiefmkjifpaeokkkjed)
+ · works in Edge too · or [load it unpacked](#install-unpacked) from this repo
+
 ---
 
 ## Why this exists
 
-Measured on the Chrome Web Store, 26 October 2026:
+Every send-to-Kindle extension on the Chrome Web Store, measured 28 October 2026:
 
 | Extension | Users | Rating | Last update |
 |---|---|---|---|
-| Send to Kindle for Google Chrome | **500 000** | **2.1** | January 2024 (22 months) |
-| Push to Kindle (FiveFilters) | 50 000 | 4.5 | April 2023 (42 months) |
-| Just Read | 200 000 | 4.5 | October 2026 |
-| SimpRead | 70 000 | 4.7 | September 2026 |
-| Send web articles to Kindle (KTool) | 2 000 | 4.7 | October 2026 |
+| Send to Kindle for Google Chrome™ | **500 000** | **2.1** | January 2024 (22 months) |
+| Push to Kindle (FiveFilters) | 50 000 | 4.5 (428 ratings) | April 2023 (42 months) |
+| Send Web to Kindle | 4 000 | 5.0 (94 ratings) | October 2026 |
+| Send to Kindle (third-party) | 2 000 | 4.7 (15 ratings) | March 2023 |
+| to kindle | 437 | 4.4 (7 ratings) | October 2026 |
+| 15 others, nearly all published in 2026 | 0 – 60 | too few ratings to read | 2026 |
 
 Half a million people use a 2.1-star extension that has not shipped in nearly two
 years. The category baseline is **4.18**, so that 2.1 is a broken product, not a
-hard category — and the one well-liked alternative has been dormant for three and
-a half years. New entrants exist but are still at ~2 000 users.
+hard category — and the best-liked alternative has been dormant for three and a
+half years.
+
+The last row is the honest part: fifteen extensions entered this space in 2026
+and sit between zero and sixty users. A clean listing is not distribution, and
+this project has no illusions about being the exception by default.
 
 ## What the complaints actually say
 
@@ -72,7 +80,7 @@ it for you.
 ## Architecture
 
 ```
-manifest.json          MV3, permissions: activeTab, scripting, storage, downloads
+manifest.json          MV3, permissions: activeTab, scripting, downloads
 vendor/Readability.js  Mozilla, Apache-2.0, unmodified
 src/extract.js         injected on click — pre-pass, Readability, post-pass, images
 src/epub.js            EPUB 3 package (OPF, nav, XHTML, CSS)
@@ -89,6 +97,7 @@ Two details worth knowing:
   and readers reject malformed XHTML.
 
 ## Install (unpacked)
+<a id="install-unpacked"></a>
 
 1. Open `chrome://extensions`
 2. Enable **Developer mode**
@@ -109,6 +118,12 @@ python3 test/serve.py
   structure, manifest/zip consistency, image references).
 - `http://localhost:8777/test/real.html` — extraction against six real pages
   (English/French/Arabic Wikipedia, MDN, Project Gutenberg, Hacker News).
+- `http://localhost:8777/test/live.html` — extraction against twenty live sites,
+  fetched through the test server's proxy. Note what this does and does not
+  prove: the proxy fetches URLs server-side, which the extension never does, so
+  a site that blocks server-side clients reports as `unreachable` rather than as
+  an extraction failure. Those same pages extract fine in the browser, where the
+  DOM is already rendered.
 - `http://localhost:8777/test/popup-preview.html` — the four popup states in both
   themes.
 
@@ -129,8 +144,11 @@ page references being both in the archive and declared in the manifest.
 This is not epubcheck — that needs a JRE, which is not installed here — but it
 covers the structural rules epubcheck enforces.
 
-Last run: 25/25 assertions, 6/6 real pages clean, 8/8 EPUBs valid, RTL correctly
-detected on Arabic Wikipedia, images embedded with intact bytes and captions.
+Last run, 28 October 2026: 25/25 assertions, 6/6 real pages clean, 26/26 EPUBs
+valid, RTL correctly detected on Arabic and Hebrew Wikipedia, images embedded
+with intact bytes and captions. Live sweep: 15 good, 2 weak, 0 broken, 3
+unreachable. The two weak are honest — lemonde.fr returns a bot challenge to the
+test proxy, and the Hacker News case is a 21-word comment.
 
 ## Known limitations
 
@@ -157,4 +175,23 @@ Stated plainly rather than discovered later:
 
 ## Licence
 
-Readability.js is Mozilla's, Apache-2.0, in `vendor/` with its licence intact.
+KindlePress is MIT licensed — see [LICENSE](LICENSE). Readability.js is
+Mozilla's, Apache-2.0, in `vendor/` with its licence intact.
+
+## Verifying the privacy claim
+
+The claim is that nothing leaves your browser. You do not have to take that on
+faith, and you do not have to read all of it:
+
+- `manifest.json` lists three permissions and no `host_permissions`. There is no
+  entry granting access to a site you have not clicked on.
+- There is no background service worker, so no code runs when you are not using
+  it.
+- Grep the whole tree for network calls: `grep -rn "fetch(\|XMLHttpRequest\|sendBeacon" src/`.
+  The only hits are in `src/extract.js`, fetching images from the page you are
+  reading so they can be embedded in the EPUB.
+- Or watch it yourself: open DevTools on the popup, click the icon, and look at
+  the Network tab.
+
+There is no analytics, no telemetry, no error reporting, and no remote
+configuration.
