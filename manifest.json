@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "KindlePress — Send articles to your Kindle",
-  "version": "0.1.1",
-  "description": "Turn any web page into a clean EPUB for your Kindle. Unlimited, free, no account, nothing leaves your browser.",
+  "name": "KindlePress — Send to Kindle, free and unlimited",
+  "version": "0.1.2",
+  "description": "Any page to a clean EPUB for Kindle. Unlimited and free, no account, no server. You download the file and drop it on Amazon.",
   "minimum_chrome_version": "116",
   "permissions": [
     "activeTab",

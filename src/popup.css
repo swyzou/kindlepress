@@ -22,6 +22,34 @@
   }
 }
 
+/*
+ * The popup follows the OS setting above. These two let a theme be pinned
+ * regardless of it, which is what the preview harness needs to show both
+ * themes side by side on one machine. Setting color-scheme alone does not
+ * do it: that changes the browser's own widget colors, not the media query.
+ */
+:root[data-theme="light"] {
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --line: #e2e0dc;
+  --paper: #faf9f7;
+  --accent: #1a1a1a;
+  --ok: #2f6b3f;
+  --warn: #8a5a1b;
+  --err: #8c2f2f;
+}
+
+:root[data-theme="dark"] {
+  --ink: #ececec;
+  --muted: #9c9c9c;
+  --line: #333;
+  --paper: #1b1b1b;
+  --accent: #ececec;
+  --ok: #7fc08f;
+  --warn: #d9a860;
+  --err: #e08a8a;
+}
+
 * {
   box-sizing: border-box;
 }

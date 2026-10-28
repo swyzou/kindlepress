@@ -9,8 +9,11 @@
     <script>
       const params = new URLSearchParams(location.search);
       const kase = params.get("case") || "success";
-      if (params.get("scheme") === "dark") {
-        document.documentElement.style.colorScheme = "dark";
+      if (params.get("scheme")) {
+        // data-theme pins the palette; colorScheme keeps the browser's own
+        // widgets (scrollbars, form controls) consistent with it.
+        document.documentElement.dataset.theme = params.get("scheme");
+        document.documentElement.style.colorScheme = params.get("scheme");
       }
 
       // Stub just enough of the extension APIs for the real popup.js to run.
