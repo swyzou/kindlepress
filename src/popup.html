@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>KindlePress</title>
+  </head>
+  <body>
+    <header>
+      <h1>KindlePress</h1>
+      <p class="tagline">Unlimited. No account. Nothing leaves your browser.</p>
+    </header>
+
+    <section id="status" class="status working">
+      <span class="spinner" aria-hidden="true"></span>
+      <span id="status-text">Reading this page…</span>
+    </section>
+
+    <section id="preview" hidden>
+      <h2 id="title"></h2>
+      <p id="byline" class="muted"></p>
+      <ul id="facts" class="facts"></ul>
+    </section>
+
+    <section id="actions" hidden>
+      <button id="download" class="primary">Download EPUB</button>
+      <button id="send" class="secondary">Open Send to Kindle…</button>
+      <p id="hint" class="hint"></p>
+    </section>
+
+    <section id="failure" hidden>
+      <p id="failure-text"></p>
+      <button id="retry" class="secondary">Try again</button>
+    </section>
+
+    <footer>
+      <label class="toggle">
+        <input type="checkbox" id="images" checked />
+        <span>Include images</span>
+      </label>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>KindlePress — real-page extraction</title>
+    <style>
+      body { font: 13px/1.6 ui-monospace, SFMono-Regular, monospace; margin: 0; padding: 20px; background: #111; color: #ddd; }
+      h1 { font: 600 15px/1.4 system-ui, sans-serif; margin: 0 0 14px; }
+      table { border-collapse: collapse; width: 100%; font-size: 12px; }
+      th, td { border-bottom: 1px solid #333; padding: 5px 8px; text-align: left; vertical-align: top; }
+      th { color: #888; font-weight: 500; }
+      .ok { color: #7fc08f; } .bad { color: #e08a8a; } .warn { color: #d9a860; } .dim { color: #777; }
+      td.num { text-align: right; font-variant-numeric: tabular-nums; }
+      #summary { margin-top: 16px; font: 600 13px/1.6 system-ui, sans-serif; }
+      details { margin-top: 14px; } summary { cursor: pointer; color: #888; }
+      pre { background: #000; padding: 10px; overflow: auto; max-height: 320px; font-size: 11px; }
+    </style>
+  </head>
+  <body>
+    <h1>Extraction against real pages</h1>
+    <table id="t">
+      <thead>
+        <tr>
+          <th>page</th><th>title extracted</th><th class="num">words</th>
+          <th class="num">imgs</th><th class="num">notes</th><th class="num">tables</th>
+          <th>dir</th><th>EPUB</th><th>XML</th><th class="num">ids</th><th>boilerplate</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="summary">running…</div>
+    <details><summary>First 1200 characters of each extracted body</summary><pre id="dump"></pre></details>
+
+    <script src="../vendor/Readability.js"></script>
+    <script src="../src/extract.js"></script>
+    <script type="module">
+      import { buildEpub } from "../src/epub.js";
+
+      const PAGES = [
+        "wikipedia-epub",
+        "mdn-fetch",
+        "wikipedia-fr",
+        "wikipedia-ar",
+        "gutenberg",
+        "hn-item",
+      ];
+
+      // Phrases that only appear in page furniture, checked against the
+      // visible text so article prose that merely mentions them is not flagged.
+      const BOILERPLATE = [
+        "Jump to content",
+        "Skip to main content",
+        "Toggle the table of contents",
+        "Create account",
+        "Terms of Use and Privacy Policy",
+        "Sign up for free",
+      ];
+      const visibleText = (html) =>
+        new DOMParser().parseFromString(`<div>${html}</div>`, "text/html").body.textContent;
+
+      const b64ToBytes = (b64) => {
+        const bin = atob(b64);
+        const u = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+        return u;
+      };
+
+      const tbody = document.querySelector("#t tbody");
+      const dump = document.getElementById("dump");
+      let fails = 0;
+
+      for (const name of PAGES) {
+        const row = tbody.insertRow();
+        const cell = (v, cls = "") => {
+          const td = row.insertCell();
+          td.className = cls;
+          td.textContent = v;
+          return td;
+        };
+        try {
+          const [html, url] = await Promise.all([
+            fetch(`pages/${name}.html`).then((r) => r.text()),
+            fetch(`pages/${name}.url`).then((r) => r.text()),
+          ]);
+          const doc = new DOMParser().parseFromString(html, "text/html");
+          const a = await globalThis.__kpExtract({
+            doc,
+            baseUrl: url.trim(),
+            includeImages: false, // no network for these fixtures
+          });
+
+          if (!a.ok) {
+            cell(name);
+            cell(a.message, "bad");
+            fails++;
+            continue;
+          }
+
+          const s = a.stats;
+          const tables = (a.html.match(/<table/g) || []).length;
+          const vis = visibleText(a.html);
+          const leaked = BOILERPLATE.filter((b) => vis.includes(b));
+
+          let epubOk = "—",
+            xmlOk = "—";
+          try {
+            const e = await buildEpub({
+              ...a,
+              images: (a.images || []).map((im) => ({ ...im, bytes: b64ToBytes(im.b64) })),
+            });
+            epubOk = `${Math.round(e.blob.size / 1024)} KB`;
+            // Hand the real file to the server so the validator can inspect it.
+            await fetch(`/save/${name}.epub`, { method: "POST", body: e.blob });
+            const probe = new DOMParser().parseFromString(
+              `<div xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">${a.html}</div>`,
+              "application/xhtml+xml"
+            );
+            xmlOk = probe.querySelector("parsererror") ? "invalid" : "valid";
+          } catch (err) {
+            epubOk = "threw";
+            xmlOk = String(err).slice(0, 40);
+          }
+
+          cell(name);
+          cell(a.title.slice(0, 46), s.words > 120 ? "" : "warn");
+          cell(s.words.toLocaleString(), "num");
+          cell(String((a.html.match(/<img/g) || []).length), "num");
+          cell(String(s.notes), "num");
+          cell(String(tables), "num");
+          cell(a.dir, a.dir === "rtl" ? "warn" : "dim");
+          cell(epubOk, epubOk === "threw" ? "bad" : "ok");
+          cell(xmlOk, xmlOk === "valid" ? "ok" : "bad");
+          cell(String((a.html.match(/ id="/g) || []).length), "num");
+          cell(leaked.length ? leaked.join(", ").slice(0, 34) : "clean", leaked.length ? "bad" : "ok");
+
+          if (xmlOk !== "valid" || leaked.length || s.words < 120) fails++;
+
+          dump.textContent +=
+            `\n===== ${name} =====\n` +
+            a.html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 1200) +
+            "\n";
+        } catch (e) {
+          cell(name);
+          cell(String(e).slice(0, 70), "bad");
+          fails++;
+        }
+      }
+
+      const sum = document.getElementById("summary");
+      sum.textContent = fails ? `${fails} page(s) with problems` : "All pages extracted cleanly";
+      sum.className = fails ? "bad" : "ok";
+    </script>
+  </body>
+</html>

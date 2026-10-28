@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../src/popup.css" />
+    <title>popup frame</title>
+  </head>
+  <body>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const kase = params.get("case") || "success";
+      if (params.get("scheme") === "dark") {
+        document.documentElement.style.colorScheme = "dark";
+      }
+
+      // Stub just enough of the extension APIs for the real popup.js to run.
+      const FIXTURES = {
+        success: {
+          ok: true,
+          title: "The quiet collapse of the shared bookshelf",
+          author: "Jane Doe",
+          published: "2026-03-14",
+          lang: "en",
+          dir: "ltr",
+          url: "https://example.com/catalogue",
+          html: "<p>" + "word ".repeat(400) + "</p>",
+          images: [],
+          readingTime: 9,
+          stats: {
+            words: 2140, readingTime: 9, imagesEmbedded: 6,
+            imagesSkipped: 2, notes: 3, usedSelection: false,
+          },
+        },
+        "no-images": {
+          ok: true,
+          title: "Sans images",
+          author: "", published: "", lang: "fr", dir: "ltr",
+          url: "https://example.fr/a", html: "<p>" + "mot ".repeat(120) + "</p>",
+          images: [], readingTime: 2,
+          stats: { words: 480, readingTime: 2, imagesEmbedded: 0, imagesSkipped: 0, notes: 0, usedSelection: true },
+        },
+        failure: { ok: false, message: "No article found on this page. Select the text you want and try again." },
+      };
+
+      globalThis.chrome = {
+        tabs: {
+          query: async () => [{ id: 1, url: "https://example.com/catalogue" }],
+          create: async () => {},
+        },
+        scripting: {
+          executeScript: async (opts) =>
+            opts.func ? [{ result: FIXTURES[kase] }] : [{ result: null }],
+        },
+        downloads: { download: async () => 1 },
+      };
+    </script>
+    <script type="module">
+      const html = await (await fetch("../src/popup.html")).text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      document.body.innerHTML = doc.body.innerHTML;
+      await import("../src/popup.js");
+    </script>
+  </body>
+</html>

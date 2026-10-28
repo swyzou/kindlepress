@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>KindlePress — live site sweep</title>
+    <style>
+      body { font: 12px/1.55 ui-monospace, SFMono-Regular, monospace; margin: 0; padding: 18px; background: #111; color: #ddd; }
+      h1 { font: 600 15px system-ui, sans-serif; margin: 0 0 12px; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border-bottom: 1px solid #2c2c2c; padding: 4px 7px; text-align: left; white-space: nowrap; }
+      th { color: #888; font-weight: 500; position: sticky; top: 0; background: #111; }
+      td.num { text-align: right; font-variant-numeric: tabular-nums; }
+      .ok { color: #7fc08f; } .bad { color: #e08a8a; } .warn { color: #d9a860; } .dim { color: #666; }
+      #sum { margin-top: 14px; font: 600 13px system-ui, sans-serif; }
+      td.t { max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+    </style>
+  </head>
+  <body>
+    <h1>Extraction sweep over live sites</h1>
+    <table id="t">
+      <thead><tr>
+        <th>site</th><th class="t">title extracted</th><th class="num">words</th>
+        <th class="num">img</th><th class="num">tbl</th><th>dir</th>
+        <th class="num">EPUB</th><th>valid</th><th>verdict</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    <div id="sum">running…</div>
+
+    <script src="../vendor/Readability.js"></script>
+    <script src="../src/extract.js"></script>
+    <script type="module">
+      import { buildEpub } from "../src/epub.js";
+
+      const SITES = [
+        ["BBC",            "https://www.bbc.com/news/articles/c3gkz1e5e8yo"],
+        ["Guardian",       "https://www.theguardian.com/science/2024/jan/05/attosecond-physics-nobel"],
+        ["NPR",            "https://www.npr.org/sections/goats-and-soda/"],
+        ["Le Monde",       "https://www.lemonde.fr/pixels/"],
+        ["France Info",    "https://www.francetvinfo.fr/sciences/"],
+        ["Ars Technica",   "https://arstechnica.com/gadgets/"],
+        ["The Verge",      "https://www.theverge.com/tech"],
+        ["Stratechery",    "https://stratechery.com/2024/the-gen-ai-bridge-to-the-future/"],
+        ["Paul Graham",    "https://paulgraham.com/greatwork.html"],
+        ["Julia Evans",    "https://jvns.ca/blog/2023/11/10/notes-on-git-error-messages/"],
+        ["Dan Luu",        "https://danluu.com/diseconomies-scale/"],
+        ["Substack",       "https://www.platformer.news/archive/"],
+        ["Medium",         "https://medium.com/better-programming"],
+        ["Wikipedia DE",   "https://de.wikipedia.org/wiki/E-Book"],
+        ["Wikipedia HE",   "https://he.wikipedia.org/wiki/%D7%A1%D7%A4%D7%A8_%D7%90%D7%9C%D7%A7%D7%98%D7%A8%D7%95%D7%A0%D7%99"],
+        ["arXiv abs",      "https://arxiv.org/abs/1706.03762"],
+        ["GitHub README",  "https://github.com/mozilla/readability"],
+        ["Stack Overflow", "https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array"],
+        ["MDN",            "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions"],
+        ["Hacker News",    "https://news.ycombinator.com/item?id=38732021"],
+      ];
+
+      const BOILER = ["Skip to main content", "Jump to content", "Accept all cookies", "Sign in to continue"];
+      const b64 = (b) => { const s = atob(b); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
+      const tbody = document.querySelector("#t tbody");
+      let ok = 0, soft = 0, hard = 0;
+
+      for (const [name, url] of SITES) {
+        const row = tbody.insertRow();
+        const cell = (v, cls = "") => { const td = row.insertCell(); td.className = cls; td.textContent = v; return td; };
+        cell(name);
+        try {
+          const res = await fetch(`/proxy?url=${encodeURIComponent(url)}`);
+          const text = await res.text();
+          if (text.startsWith('{"error"')) { cell("fetch failed: " + text.slice(0, 60), "bad"); hard++; continue; }
+          const doc = new DOMParser().parseFromString(text, "text/html");
+          const a = await globalThis.__kpExtract({ doc, baseUrl: res.headers.get("X-Final-Url") || url, includeImages: false });
+
+          if (!a.ok) { cell(a.message.slice(0, 50), "warn"); soft++; continue; }
+
+          const s = a.stats;
+          const imgs = (a.html.match(/<img/g) || []).length;
+          const tbl = (a.html.match(/<table/g) || []).length;
+          const vis = new DOMParser().parseFromString(`<div>${a.html}</div>`, "text/html").body.textContent;
+          const leaked = BOILER.filter((b) => vis.includes(b));
+
+          let size = "—", valid = "—";
+          try {
+            const e = await buildEpub({ ...a, images: (a.images || []).map((im) => ({ ...im, bytes: b64(im.b64) })) });
+            size = Math.round(e.blob.size / 1024);
+            await fetch(`/save/live-${name.replace(/[^A-Za-z0-9]/g, "")}.epub`, { method: "POST", body: e.blob });
+            const probe = new DOMParser().parseFromString(
+              `<div xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">${a.html}</div>`,
+              "application/xhtml+xml");
+            valid = probe.querySelector("parsererror") ? "XML BAD" : "xml ok";
+          } catch (err) { valid = "threw"; }
+
+          cell(a.title.slice(0, 54), "t dim");
+          cell(s.words.toLocaleString(), "num");
+          cell(String(imgs), "num");
+          cell(String(tbl), "num");
+          cell(a.dir, a.dir === "rtl" ? "warn" : "dim");
+          cell(String(size), "num");
+          cell(valid, valid === "xml ok" ? "ok" : "bad");
+
+          let verdict = "good", cls = "ok";
+          if (valid !== "xml ok") { verdict = "invalid XML"; cls = "bad"; hard++; }
+          else if (leaked.length) { verdict = "boilerplate: " + leaked[0]; cls = "bad"; soft++; }
+          else if (s.words < 150) { verdict = "thin (" + s.words + "w)"; cls = "warn"; soft++; }
+          else ok++;
+          cell(verdict, cls);
+        } catch (e) {
+          cell(String(e).slice(0, 60), "bad"); hard++;
+        }
+      }
+
+      const sum = document.getElementById("sum");
+      sum.textContent = `${ok} good · ${soft} weak · ${hard} broken  (of ${SITES.length})`;
+      sum.className = hard ? "bad" : soft ? "warn" : "ok";
+    </script>
+  </body>
+</html>

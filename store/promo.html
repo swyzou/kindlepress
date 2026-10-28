@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>KindlePress — store screenshots</title>
+    <style>
+      :root {
+        --ink: #17171a;
+        --muted: #6b6b73;
+        --line: #e4e2dd;
+        --paper: #f7f5f1;
+        --card: #ffffff;
+        --accent: #17171a;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        width: 1280px; height: 800px; overflow: hidden;
+        background: var(--paper); color: var(--ink);
+        font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .slide { display: none; width: 1280px; height: 800px; padding: 0 72px; }
+      .slide.on { display: flex; flex-direction: column; justify-content: center; }
+
+      h1 { font-size: 44px; line-height: 1.08; letter-spacing: -0.025em; margin: 0 0 14px; font-weight: 660; }
+      h1 em { font-style: normal; color: var(--muted); }
+      .sub { font-size: 19px; color: var(--muted); margin: 0 0 40px; max-width: 760px; }
+
+      /* ---- slide 1 : produit en situation ---- */
+      .stage { display: grid; grid-template-columns: 1fr 364px; gap: 34px; align-items: start; }
+      .page {
+        background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+        padding: 32px 36px; height: 496px; overflow: hidden; position: relative;
+      }
+      .page .kicker { font: 600 11px/1 ui-monospace, monospace; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+      .page h2 { font-size: 30px; line-height: 1.16; margin: 12px 0 14px; font-weight: 640; letter-spacing: -0.015em; }
+      .page p { color: #3c3c43; margin: 0 0 11px; font-size: 14px; }
+      .shot { height: 128px; border-radius: 8px; margin: 16px 0 12px;
+        background: linear-gradient(158deg, #8d867c 0%, #6b655c 48%, #46423c 100%); }
+      .cap { font-size: 12px; color: var(--muted); font-style: italic; }
+      .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 90px;
+        background: linear-gradient(transparent, #fff); }
+
+      .popup {
+        background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+        box-shadow: 0 18px 44px rgba(0,0,0,.13); padding: 18px 18px 16px;
+      }
+      .popup .brand { font-size: 15px; font-weight: 660; margin: 0; }
+      .popup .tag { font-size: 11px; color: var(--muted); margin: 2px 0 14px; }
+      .rule { height: 1px; background: var(--line); margin: 0 0 13px; }
+      .popup .title { font-size: 14px; font-weight: 620; line-height: 1.35; margin: 0 0 3px; }
+      .popup .by { font-size: 11px; color: var(--muted); margin: 0 0 12px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 15px; padding: 0; list-style: none; }
+      .chips li { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; }
+      .chips li.hl { color: var(--ink); border-color: #c9c5bd; font-weight: 560; }
+      .btn { display: block; width: 100%; text-align: center; padding: 10px; border-radius: 8px;
+        font-size: 13px; font-weight: 620; background: var(--accent); color: #fff; margin: 0 0 7px; }
+      .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 500; }
+      .foot { font-size: 11px; color: var(--muted); margin: 9px 0 0; }
+
+      /* ---- slide 2 : les trois promesses ---- */
+      .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 8px; }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 32px 28px; min-height: 236px; }
+      .card .n { font: 600 12px/1 ui-monospace, monospace; color: var(--muted); letter-spacing: .1em; }
+      .card h3 { font-size: 21px; margin: 14px 0 10px; font-weight: 640; letter-spacing: -0.01em; }
+      .card p { font-size: 14px; color: #4a4a52; margin: 0; }
+      .card .why { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+
+      /* ---- slide 3 : tableau de capacités ---- */
+      table { width: 100%; border-collapse: collapse; background: var(--card);
+        border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+      th, td { text-align: left; padding: 15px 22px; border-bottom: 1px solid var(--line); font-size: 15px; }
+      th { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; background: #fbfaf8; }
+      tr:last-child td { border-bottom: 0; }
+      td.ok { color: #2f6b3f; font-weight: 600; white-space: nowrap; }
+      td.no { color: #8a5a1b; font-weight: 600; white-space: nowrap; }
+      td.what { color: #4a4a52; font-size: 14px; }
+      .note { margin-top: 22px; font-size: 13px; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <!-- 1 ------------------------------------------------------------- -->
+    <section class="slide" id="s1">
+      <h1>Any page, on your Kindle. <em>In two clicks.</em></h1>
+      <p class="sub">Click once. KindlePress reads the article, keeps the images, tables and footnotes, and hands you a clean EPUB.</p>
+      <div class="stage">
+        <div class="page">
+          <div class="kicker">3 min read</div>
+          <h2>Curiosity Blog, Sols 5036–5042: Watching the Clouds Go By</h2>
+          <p>Earth planning date: Monday, October 19 — the rover woke to a sky busy with noctilucent clouds, and the team had a decision to make about the drive ahead.</p>
+          <div class="shot"></div>
+          <div class="cap">Curiosity's Mastcam view across the drying floor of Gale Crater.</div>
+          <p>Pulp arrives wet and leaves dry, and almost everything between those two states is a negotiation with heat and patience.</p>
+          <div class="fade"></div>
+        </div>
+        <div class="popup">
+          <p class="brand">KindlePress</p>
+          <p class="tag">Unlimited. No account. Nothing leaves your browser.</p>
+          <div class="rule"></div>
+          <p class="title">Curiosity Blog, Sols 5036–5042: Watching the Clouds Go By</p>
+          <p class="by">NASA Science · 2026-10-19</p>
+          <ul class="chips">
+            <li>435 words</li><li>~2 min</li><li>285 KB</li><li class="hl">2 images</li>
+          </ul>
+          <div class="btn">Download EPUB</div>
+          <div class="btn ghost">Open Send to Kindle…</div>
+          <p class="foot">Drop the file on Amazon's uploader, or email it to your Kindle address.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 ------------------------------------------------------------- -->
+    <section class="slide" id="s2">
+      <h1>No server. <em>So no limits.</em></h1>
+      <p class="sub">Every other send-to-Kindle tool runs a backend, which is why they all meter you — credits, trials, subscriptions. KindlePress builds the EPUB inside your browser, so there is nothing to meter.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="n">01</div>
+          <h3>Unlimited, free</h3>
+          <p>Send as many articles as you like, forever. No credits, no trial that quietly expires, no upgrade prompt.</p>
+          <div class="why">Building a file in your browser costs nothing per article.</div>
+        </div>
+        <div class="card">
+          <div class="n">02</div>
+          <h3>No account</h3>
+          <p>Install it and use it. Nothing to sign up for, no email to hand over, no password to forget.</p>
+          <div class="why">There is no service behind it to have an account on.</div>
+        </div>
+        <div class="card">
+          <div class="n">03</div>
+          <h3>Nothing leaves your browser</h3>
+          <p>The page you are reading is never sent anywhere. No site permissions are requested at all.</p>
+          <div class="why">Access is granted for one click, on one tab, by you.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 ------------------------------------------------------------- -->
+    <section class="slide" id="s3">
+      <h1>It keeps what the others drop.</h1>
+      <p class="sub">KindlePress reads the page your browser is actually showing — after scripts have run, with your session applied.</p>
+      <table>
+        <thead><tr><th style="width:230px">What</th><th style="width:120px">Kept</th><th>How</th></tr></thead>
+        <tbody>
+          <tr><td>Images</td><td class="ok">Yes</td><td class="what">Lazy-loaded and srcset images resolved, then embedded in the file — including figures the usual readers miss entirely.</td></tr>
+          <tr><td>Data tables</td><td class="ok">Yes</td><td class="what">Comparison tables survive instead of being mistaken for page layout.</td></tr>
+          <tr><td>Footnotes</td><td class="ok">Yes</td><td class="what">Rebuilt as proper endnotes, with links that work both ways on the device.</td></tr>
+          <tr><td>Right-to-left</td><td class="ok">Yes</td><td class="what">Arabic, Hebrew and Persian keep their direction instead of being flipped.</td></tr>
+          <tr><td>Logged-in pages</td><td class="ok">Yes</td><td class="what">University proxies and subscriber sessions work, because it reads your own window.</td></tr>
+          <tr><td>Hard paywalls</td><td class="no">No</td><td class="what">When a server never sends the text, nothing in your browser can recover it. We say so rather than pretend.</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Open source engine: article extraction by Mozilla's Readability.</p>
+    </section>
+
+    <script>
+      const n = new URLSearchParams(location.search).get("s") || "1";
+      document.getElementById("s" + n).classList.add("on");
+    </script>
+  </body>
+</html>
