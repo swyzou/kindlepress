@@ -11,3 +11,6 @@
 
 # Editor / local tooling
 .claude/
+
+# Launch tactics — local only, not for the public repo
+/store/show-hn.md
